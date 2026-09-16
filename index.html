@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thám tử hình học: Bí mật hình vuông</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --accent: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { color: var(--primary); margin-bottom: 10px; }
+        h2 { color: var(--text-color); margin-bottom: 20px; }
+        p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Màn hình 1: HD3 */
+        .room-scene {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: #e0e7ff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px dashed var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .item {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 2rem;
+        }
+
+        .item:hover {
+            transform: scale(1.1);
+        }
+
+        .item span {
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .inventory {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .slot {
+            width: 70px;
+            height: 70px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            background: #f8fafc;
+        }
+
+        .slot.filled {
+            border-color: var(--accent);
+            background: #d1fae5;
+        }
+
+        /* Màn hình 2: HD4 */
+        .lab-container {
+            display: flex;
+            width: 100%;
+            gap: 20px;
+            text-align: left;
+        }
+
+        .square-workspace {
+            flex: 1;
+            position: relative;
+            height: 300px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .square-box {
+            width: 160px;
+            height: 160px;
+            border: 3px solid var(--primary);
+            position: relative;
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .vertex {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+        }
+        .v-tl { top: -6px; left: -6px; }
+        .v-tr { top: -6px; right: -6px; }
+        .v-bl { bottom: -6px; left: -6px; }
+        .v-br { bottom: -6px; right: -6px; }
+
+        .diagonal {
+            position: absolute;
+            background: #f59e0b;
+        }
+        .d1 {
+            width: 226px;
+            height: 2px;
+            top: 79px;
+            left: -33px;
+            transform: rotate(45deg);
+        }
+        .d2 {
+            width: 226px;
+            height: 2px;
+            top: 79px;
+            left: -33px;
+            transform: rotate(-45deg);
+        }
+
+        .controls-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .observation-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .observation-box h3 {
+            margin-top: 0;
+            color: #047857;
+            font-size: 1.1rem;
+        }
+
+        .observation-box ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        .observation-box li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #166534;
+        }
+
+        .tool-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tool-btn {
+            background-color: #3b82f6;
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        .tool-btn:hover { background-color: #2563eb; }
+
+        /* Màn hình 3 */
+        .congrats-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- MÀN HÌNH CHÀO MỪNG -->
+    <div id="screen-welcome" class="screen active">
+        <h1>🕵️‍♂️ Thám tử hình học</h1>
+        <h2>Bí mật hình vuông</h2>
+        <p>Chào các em! Hãy cùng Thám tử Vuông đi tìm các hình vuông trong thực tế (HD3) và khám phá các tính chất kỳ diệu của chúng trong phòng thí nghiệm (HD4) nhé!</p>
+        <button class="btn" onclick="goToScreen('screen-hd3')">Bắt đầu hành trình</button>
+    </div>
+
+    <!-- MÀN HÌNH 1: HD3 - TÌM HÌNH  vuông TRONG THỰC TẾ -->
+    <div id="screen-hd3" class="screen">
+        <h2>Nhiệm vụ 1: Truy tìm hình vuông trong thực tế (HD3)</h2>
+        <p>Hãy nhấp chọn đúng <strong>3 vật có dạng hình vuông</strong> có trong khung cảnh phòng học dưới đây!</p>
+        
+        <div class="room-scene">
+            <!-- Vật đúng 1: Đồng hồ -->
+            <div class="item" style="top: 30px; left: 50px;" onclick="selectItem(this, true)">
+                🕰️<span>Đồng hồ</span>
+            </div>
+            <!-- Vật sai 1: Quả bóng -->
+            <div class="item" style="top: 200px; left: 180px;" onclick="selectItem(this, false)">
+                ⚽<span>Quả bóng</span>
+            </div>
+            <!-- Vật đúng 2: Bàn cờ -->
+            <div class="item" style="top: 180px; left: 350px;" onclick="selectItem(this, true)">
+                ♟️<span>Bàn cờ</span>
+            </div>
+            <!-- Vật sai 2: Cái đĩa -->
+            <div class="item" style="top: 50px; left: 500px;" onclick="selectItem(this, false)">
+                🍽️<span>Cái đĩa</span>
+            </div>
+            <!-- Vật đúng 3: Khung tranh -->
+            <div class="item" style="top: 60px; left: 650px;" onclick="selectItem(this, true)">
+                🖼️<span>Khung tranh</span>
+            </div>
+        </div>
+
+        <div class="inventory">
+            <div class="slot" id="slot-1">?</div>
+            <div class="slot" id="slot-2">?</div>
+            <div class="slot" id="slot-3">?</div>
+        </div>
+
+        <button id="btn-next-hd4" class="btn" style="display: none;" onclick="goToScreen('screen-hd4')">Sang phòng thí nghiệm ➔</button>
+    </div>
+
+    <!-- MÀN HÌNH 2: HD4 - KHÁM PHÁ TÍNH CHẤT HÌNH VUÔNG -->
+    <div id="screen-hd4" class="screen">
+        <h2>Nhiệm vụ 2: Phòng thí nghiệm hình vuông (HD4)</h2>
+        <p>Sử dụng các dụng cụ đo đạc để tìm hiểu về các cạnh, góc và đường chéo của hình vuông ABCD.</p>
+
+        <div class="lab-container">
+            <div class="square-workspace">
+                <div class="square-box">
+                    <div class="vertex v-tl"></div>
+                    <div class="vertex v-tr"></div>
+                    <div class="vertex v-bl"></div>
+                    <div class="vertex v-br"></div>
+                    <div id="diag-1" class="diagonal d1" style="display:none;"></div>
+                    <div id="diag-2" class="diagonal d2" style="display:none;"></div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="tool-buttons">
+                    <button class="btn tool-btn" onclick="measureEdges()">📏 Đo các cạnh</button>
+                    <button class="btn tool-btn" onclick="measureAngles()">📐 Đo các góc</button>
+                    <button class="btn tool-btn" onclick="measureDiagonals()">❌ Đo đường chéo</button>
+                </div>
+
+                <div class="observation-box">
+                    <h3>Nhận xét (Sổ tay thám tử):</h3>
+                    <ul id="observation-list">
+                        <li>Hãy chọn các dụng cụ đo phía trên để hoàn thành nhận xét!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <button id="btn-finish" class="btn" style="display: none;" onclick="goToScreen('screen-end')">Hoàn thành xuất sắc 🎉</button>
+    </div>
+
+    <!-- MÀN HÌNH 3: KẾT THÚC / VINH DANH -->
+    <div id="screen-end" class="screen">
+        <div class="congrats-icon">🏆</div>
+        <h1>Chúc mừng bạn đã hoàn thành nhiệm vụ!</h1>
+        <p>Em đã nắm vững các yếu tố và tính chất cơ bản của hình vuông:</p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 20px; width: 80%;">
+            <strong>Nhận xét chung về hình vuông:</strong>
+            <ul>
+                <li>Bốn cạnh bằng nhau.</li>
+                <li>Bốn góc bằng nhau và bằng 90°.</li>
+                <li>Hai đường chéo bằng nhau.</li>
+            </ul>
+        </div>
+        <button class="btn" onclick="location.reload()">Chơi lại từ đầu</button>
+    </div>
+</div>
+
+<script>
+    function goToScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // Logic Màn hình 1 (HD3)
+    let foundCount = 0;
+    function selectItem(element, isSquare) {
+        if (element.style.opacity === '0.4') return; // Đã click rồi
+
+        if (isSquare) {
+            foundCount++;
+            element.style.opacity = '0.4';
+            element.style.pointerEvents = 'none';
+            
+            const slot = document.getElementById(`slot-${foundCount}`);
+            slot.innerText = element.innerText.trim()[0]; // Lấy emoji
+            slot.classList.add('filled');
+
+            if (foundCount === 3) {
+                document.getElementById('btn-next-hd4').style.display = 'block';
+            }
+        } else {
+            alert('Ôi không! Đây không phải là hình vuông. Hãy thử lại nhé!');
+            element.style.transform = 'scale(0.9)';
+            setTimeout(() => element.style.transform = 'scale(1)', 200);
+        }
+    }
+
+    // Logic Màn hình 2 (HD4)
+    let checkedEdges = false;
+    let checkedAngles = false;
+    let checkedDiagonals = false;
+
+    function updateObservationList() {
+        const list = document.getElementById('observation-list');
+        list.innerHTML = '';
+        
+        if (checkedEdges) {
+            list.innerHTML += '<li>✓ Bốn cạnh bằng nhau (AB = BC = CD = DA).</li>';
+        }
+        if (checkedAngles) {
+            list.innerHTML += '<li>✓ Bốn góc bằng nhau và bằng 90°.</li>';
+        }
+        if (checkedDiagonals) {
+            list.innerHTML += '<li>✓ Hai đường chéo bằng nhau.</li>';
+        }
+
+        if (!checkedEdges && !checkedAngles && !checkedDiagonals) {
+            list.innerHTML = '<li>Hãy chọn các dụng cụ đo phía trên để hoàn thành nhận xét!</li>';
+        }
+
+        if (checkedEdges && checkedAngles && checkedDiagonals) {
+            document.getElementById('btn-finish').style.display = 'block';
+        }
+    }
+
+    function measureEdges() {
+        checkedEdges = true;
+        alert('Kết quả thước kẻ: Độ dài các cạnh AB, BC, CD, DA hoàn toàn bằng nhau!');
+        updateObservationList();
+    }
+
+    function measureAngles() {
+        checkedAngles = true;
+        alert('Kết quả thước đo góc: Mỗi góc của hình vuông đều là góc vuông (90°)!');
+        updateObservationList();
+    }
+
+    function measureDiagonals() {
+        checkedDiagonals = true;
+        document.getElementById('diag-1').style.display = 'block';
+        document.getElementById('diag-2').style.display = 'block';
+        alert('Kết quả đo: Hai đường chéo cắt nhau tại O và có độ dài bằng nhau!');
+        updateObservationList();
+    }
+</script>
+
+</body>
+</html>
